@@ -54,3 +54,6 @@ some such from a feed provider.
 
 The command `python manage.py runserver` will start a server on localhost:8080.
 
+To view the feeds, go to `http://localhost:8000/feeds`
+
+
