@@ -1,0 +1,123 @@
+body {
+    font-family: helvetica, arial, sans;
+}
+
+a:link {color: blue; text-decoration:none;}
+a:visited {color: blue;}
+a:hover {color: blue; text-decoration:underline;}
+a:active {color: blue;}
+
+#feedlist {
+    margin:0;
+    padding:0;
+    list-style:none;
+}
+
+#feedlist li {
+    margin-bottom: 5px;
+}
+
+#feedlist li a.unread:link,
+#feedlist li a.unread:visited,
+#feedlist li a.unread:hover,
+#feedlist li a.unread:active {
+    color: red;
+}
+
+a.feedurl:link,
+a.feedurl:visited,
+a.feedurl:hover,
+a.feedurl:active {
+    color: #777;
+}
+
+.feedurl {
+    font-size: smaller;
+    font-weight: bold;
+}
+
+.itemcount {
+    font-size: smaller;
+    color: red;
+    font-weight: bold;
+}
+
+ul#feedlist li.allfeeditems {
+    margin-bottom: 15px;
+}
+
+.paginator a:link,
+.paginator a:visited,
+.paginator a:hover,
+.paginator a:active {
+    color: #777;
+}
+.paginator {
+    margin-top: 15px;
+    margin-bottom: 15px;
+    font-size: .75em;
+    font-weight:bold;
+}
+
+#itempage .item {
+    padding: 8px 5px;
+    border-top: 1px solid #efefef;
+}
+
+#itempage .item.unread a:link,
+#itempage .item.unread a:visited,
+#itempage .item.unread a:hover,
+#itempage .item.unread a:active {
+    color: red;
+}
+
+#itempage .item a:link,
+#itempage .item a:visited,
+#itempage .item a:hover,
+#itempage .item a:active {
+    color: blue;
+}
+
+.infoline {
+    color: #afafaf;
+    padding-top: 3px;
+    font-size: .75em;
+}
+
+.infoline .infocomponent {
+    margin-right: 15px;
+}
+
+.infoline .infocomponent .label {
+    font-style: italic;
+}
+
+.toolbar {
+    margin-bottom: 20px;
+}
+
+.toolbar a {
+    margin-right: 10px;
+}
+
+.content {
+    max-width: 760px;
+    margin: 5px;
+}
+
+.itemcontent {
+    margin-left: 5px;
+}
+
+.itemdescription {
+    background-color: #e7e7e7;
+    padding: 5px;
+}
+
+.folder {
+    margin: 10px 0;
+}
+
+.folderlist {
+    margin: 10px 0;
+}

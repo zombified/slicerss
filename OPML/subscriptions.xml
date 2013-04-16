@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="1.0">
+    <head>
+        <title>RSS Subscriptions</title>
+    </head>
+    <body>
+        <!-- Entry -->
+        <outline text="Polygon" title="polygon" type="rss"
+            xmlUrl="http://www.polygon.com/rss/index.xml" htmlUrl="http://www.polygon.com" />
+
+        <!-- "Folder" With an Entry -->
+        <outline title="podcasts" text="podcasts">
+            <outline text="FLOSS Weekly" title="FLOSS Weekly" type="rss"
+                xmlUrl="http://leoville.tv/podcasts/floss.xml" htmlUrl="http://twit.tv/floss"/>
+        </outline>
+    </body>
+</opml>

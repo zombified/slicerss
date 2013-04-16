@@ -1,0 +1,32 @@
+{% extends "feeds/layout.html" %}
+
+{% block title %}Feeds{% endblock %}
+{% block content %}
+
+<div class='toolbar'>
+    <a href='/feeds/mark_all_read'>Mark All Read</a>
+</div>
+<ul id='feedlist'>
+    <li class='allfeeditems'><a href="all">All Feeds</a></li>
+
+    {% for item in sublist %}
+        {% if item.0 == "folder" %}
+        <li class='folder'>
+            <span class='foldertitle'>{{item.1}}</span>
+            <ul class='folderlist'>
+        {% elif item.0 == "outdent" %}
+            </ul>
+        </li>
+        {% elif item.0 == "sub" %}
+        <li>
+            <a class='feed{% if item.2.unread > 0 %} unread{% endif %}' title="Last Updated {{item.2.lastpull.year}}-{{item.2.lastpull.month}}-{{item.2.lastpull.day}} at {{item.2.lastpull.hour}}:{{item.2.lastpull.minute}}" href="/feeds/{{item.2.id}}">{{item.2.title}}</a>
+            <a class='feedurl' href="{{item.2.link}}" target='_blank'>url</a>
+            {% if item.2.unread > 0 %}
+            <span class='itemcount' class='unread'>{{item.2.unread}}</span>
+            {% endif %}
+        </li>
+        {% endif %}
+    {% endfor %}
+</ul>
+
+{% endblock %}

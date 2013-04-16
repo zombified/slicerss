@@ -1,0 +1,60 @@
+{% extends "feeds/layout.html" %}
+
+{% block title %}{{feed_title}}{% endblock %}
+{% block content %}
+
+    <h1><a href='{{feed_link}}' target='_blank'>{{feed_title}}</a></h1>
+
+    <div class='toolbar'>
+        <a href='/feeds/'>&larr; Index</a>
+        <a href='/feeds/{{feed_id}}'>Refresh</a>
+        <a href='/feeds/{{feed_id}}/mark_all_read'>Mark All Read</a>
+        <a href='/feeds/{{feed_id}}/mark_all_unread'>Mark All Unread</a>
+    </div>
+    <div class='paginator'>
+        {%if page != 1 %}<a href='/feeds/{{feed_id}}?page=1'>First Page</a>{% endif %}
+        {%if page == 1 %}<span>First Page</span>{% endif %}
+        -
+        {% if prevpage != None %}<a href='/feeds/{{feed_id}}?page={{prevpage}}'>Prev Page</a>{% endif %}
+        {% if prevpage == None %}<span class='disabled'>Prev Page</span>{% endif %}
+        -
+        <span class='location'>{{page}} of {{totalpages}}</span>
+        -
+        {% if nextpage != None %}<a href='/feeds/{{feed_id}}?page={{nextpage}}'>Next Page</a>{% endif %}
+        {% if nextpage == None %}<span class='disabled'>Next Page</a>{% endif %}
+        -
+        {% if page != lastpage %}<a href='/feeds/{{feed_id}}?page={{lastpage}}'>Last Page</a>{% endif %}
+        {% if page == lastpage %}<span>Last Page</span>{% endif %}
+    </div>
+    <div id='itempage'>
+        {% for item in items %}
+        <div class="item {% if not item.has_been_read %}unread{% endif %}">
+            <a href='/feeds/{{item.feed.id}}/item/{{item.id}}'>{{item.title}}</a>
+            <div class='infoline'>
+                {% if item.published != None %}
+                <span class='infocomponent'><span class='label'>published:</span> {{item.published}}</span>
+                {% endif %}
+                {% if item.updated != None and item.updated != item.published %}
+                <span class='infocomponent'><span class='label'>updated:</span> {{item.updated}}</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class='paginator'>
+        {%if page != 1 %}<a href='/feeds/{{feed_id}}?page=1'>First Page</a>{% endif %}
+        {%if page == 1 %}<span>First Page</span>{% endif %}
+        -
+        {% if prevpage != None %}<a href='/feeds/{{feeds_id}}?page={{prevpage}}'>Prev Page</a>{% endif %}
+        {% if prevpage == None %}<span class='disabled'>Prev Page</span>{% endif %}
+        -
+        <span class='location'>{{page}} of {{totalpages}}</span>
+        -
+        {% if nextpage != None %}<a href='/feeds/{{feed_id}}?page={{nextpage}}'>Next Page</a>{% endif %}
+        {% if nextpage == None %}<span class='disabled'>Next Page</a>{% endif %}
+        -
+        {% if page != lastpage %}<a href='/feeds/{{feed_id}}?page={{lastpage}}'>Last Page</a>{% endif %}
+        {% if page == lastpage %}<span>Last Page</span>{% endif %}
+    </div>
+
+{% endblock %}

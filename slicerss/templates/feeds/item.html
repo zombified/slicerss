@@ -1,0 +1,33 @@
+{% extends "feeds/layout.html" %}
+
+{% block title %}{{feed_title}}{% endblock %}
+{% block content %}
+
+<h1><a href='{{item.feed.link}}' target='_blank'>{{item.feed.title}}</a></h1>
+
+<div class='toolbar'>
+    <a href='/feeds/'>&larr; Index</a>
+    <a href='/feeds/{{feed_id}}'>&larr; All Feed Items</a>
+    <a href='/feeds/{{feed_id}}/item/{{item.id}}/mark_unread'>Mark as Unread</a>
+</div>
+
+<div class='paginator'>
+    {% if prev_id != None %}<a href='/feeds/{{feed_id}}/item/{{prev_id}}'>&larr; Older</a>{% endif %}
+    {% if prev_id != None and next_id != None %}&middot;{% endif %}
+    {% if next_id != None %}<a href='/feeds/{{feed_id}}/item/{{next_id}}'>Newer &rarr;</a>{% endif %}
+</div>
+
+<h2><a href='{{item.link}}' target='_blank'>{{item.title}}</a></h2>
+<div class='itemcontent'>
+    {% if item.disp_description != "" %}
+    <div class='itemdescription'>
+        {% autoescape off %}{{item.disp_description}}{% endautoescape %}
+    </div>
+    {% endif %}
+
+    {% autoescape off %}{{item.disp_content}}{% endautoescape %}
+
+    {% autoescape off %}{{item.disp_enclosures}}{% endautoescape %}
+</div>
+
+{% endblock %}
