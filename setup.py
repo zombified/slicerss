@@ -9,6 +9,7 @@ setup(
     url='http://joelkleier.com',
     packages=[],
     install_requires=[
+        'docopt',
         'django',
         'feedparser',
         'lxml',
