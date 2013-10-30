@@ -9,6 +9,7 @@ setup(
     url='http://joelkleier.com',
     packages=[],
     install_requires=[
+        'beautifulsoup4',
         'docopt',
         'django',
         'feedparser',
@@ -16,6 +17,7 @@ setup(
         'opml',
         'python-dateutil',
         'pytz',
+        'requests',
         'sqlalchemy',
     ],
     scripts = [

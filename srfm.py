@@ -1,8 +1,8 @@
 """SliceRSS Feed Manager
 
 Usage:
-    srfm.py guess <htmlurl> [options]
-    srfm.py add <feedurl> [--name=<name>] [options]
+    srfm.py guess <htmlurl> [--name=<name>] [TAG ...] [options]
+    srfm.py add <feedurl> [--name=<name>] [TAG ...] [options]
     srfm.py del <feed> [options]
     srfm.py addtag <feed> [TAG ...] [options]
     srfm.py deltag <feed> [TAG ...] [options]
@@ -18,17 +18,13 @@ Options:
 """
 __version__ = '0.1'
 
-
-# TODO:
-#   - deltag, addtag
-#   - add, del
-#   - guess
-#
-
+from bs4 import BeautifulSoup
 from docopt import docopt
+import feedparser
 import json
 import opml
 import os
+import requests
 
 #
 # the storage format:
@@ -138,7 +134,7 @@ def show_list(feeds, only_tags, withtags, sortbyname):
         tags = []
         for feed in feeds:
             tags.extend(feed['tags'])
-        tags = [a for a in set(tags)]
+        tags = sorted([a for a in set(tags)])
         for tag in tags:
             print tag
         return
@@ -149,13 +145,127 @@ def show_list(feeds, only_tags, withtags, sortbyname):
     def print_feed(feed):
         print "%s%s: %s - %s [%s]" % (
                 " " if feed['id'] < 10 else "",
-                feed['id'], feed['title'], feed['xmlUrl'], ",".join(set(feed['tags'])))
+                feed['id'], feed['title'], feed['xmlUrl'], ",".join(sorted(set(feed['tags']))))
     for feed in feedlist:
         if filter:
             if len(filtertags.intersection(set(feed['tags']))) > 0:
                 print_feed(feed)
         else:
             print_feed(feed)
+
+# feeds -- list of feed dicts to operate on
+# feed -- the title or id of a feed to act on... all matches are modified
+# tags -- list of strings representing tags to add to the selected feed
+def add_tag(feeds, feed, tags):
+    for f in feeds:
+        if f['title'].strip().lower() == feed.strip().lower() or str(f['id']) == feed:
+            f['tags'].extend(tags)
+            f['tags'] = [a for a in set(f['tags'])]
+
+# feeds -- list of feed dicts to operate on
+# feed -- the title or id of a feed to act on... all matches are modified
+# tags -- list of strings representing tags to add to the selected feed
+def del_tag(feeds, feed, tags):
+    for f in feeds:
+        if f['title'].strip().lower() == feed.strip().lower() or str(f['id']) == feed:
+            for t in tags:
+                if t in f['tags']:
+                    f['tags'].remove(t)
+
+# feeds -- list of feed dicts to operate on
+# feedurl -- the XML/RSS/Atom URL of the feed in question
+# altname -- title to give to the feed instead of using the name provided by
+#            the feed
+# tags -- tags to associate with the feed
+def addfeed(feeds, feedurl, altname, tags):
+    # check to make sure this isn't already added
+    for feed in feeds:
+        if feed['xmlUrl'] == feedurl:
+            print 'Feed already found.'
+            return
+
+    newfeed = dict(
+        id=len(feeds),
+        tags=[a for a in set(tags)] if tags else [],
+        title=altname if altname else '',
+        xmlUrl=feedurl,
+        htmlUrl='')
+
+    # grab the feed to get some metadata about it (specifically, the original
+    # title and html url)
+    try:
+        resp = feedparser.parse(feedurl)
+        if not hasattr(resp['feed'], 'title'):
+            print 'Feed not found.'
+            return
+        if not altname:
+            newfeed['title'] = resp['feed'].title
+        newfeed['htmlUrl'] = resp['feed'].link
+    except Exception as ex:
+        print 'An error occured fetching your feed. %s' % str(ex)
+        return
+
+    feeds.append(newfeed)
+    print "Added '%s' (id: %s)" % (newfeed['title'], newfeed['id'])
+
+# feeds -- list of feed dicts to operate on
+# feed -- the title or id of feeds to remove (all matching feeds are removed)
+def delfeed(feeds, feed):
+    return [a for a in feeds \
+                if a['title'].strip().lower() != feed.strip().lower() \
+                   and str(a['id']) != feed.strip().lower()]
+
+# feeds -- list of feed dicts to operate on
+# htmlurl -- url to use to try and guess an RSS feed url from
+def guess(feeds, htmlurl, altname, tags):
+    r = requests.get(htmlurl)
+    if r.status_code != requests.codes.ok:
+        print "Can't get url, got %s status code." % r.status_code
+        return
+    soup = BeautifulSoup(r.text)
+    found_xmlurl = None
+    try:
+        links = soup.html.head.find_all('link')
+        rsstypes = ('application/rss+xml',
+                    'application/rdf+xml',
+                    'application/atom+xml',
+                    'application/xml',
+                    'text/xml')
+        for link in links:
+            # does the html document have a link element identified as a RSS feed?
+            if 'type' in link.attrs and link['type'].strip().lower() in rsstypes:
+                found_xmlurl = link['href']
+
+            # does the html document have a link element w/ a href ending w/ rss
+            # or xml, possibly indicating an RSS feed?
+            elif link['href'].strip().lower().endswith('rss') \
+                    or link['href'].strip().lower().endswith('xml'):
+                found_xmlurl = link['href']
+
+    except AttributeError:
+        found_xmlurl = None
+
+    if not found_xmlurl:
+        print "No RSS URL's found"
+        return
+
+    try:
+        resp = feedparser.parse(found_xmlurl)
+        if not hasattr(resp['feed'], 'title'):
+            print "RSS feed guessed (%s), but doesn't seem to be valid." % found_xmlurl
+            return
+        newfeed = dict(
+            id=len(feeds),
+            tags=[a for a in set(tags)] if tags else [],
+            title=altname if altname else resp['feed'].title,
+            xmlUrl=found_xmlurl,
+            htmlUrl=htmlurl)
+        feeds.append(newfeed)
+        print "Added '%s' (id: %s)" % (newfeed['title'], newfeed['id'])
+    except Exception as ex:
+        print 'An error occured fetching your feed. %s' % str(ex)
+        return
+
 
 if __name__ == '__main__':
     arguments = docopt(__doc__, version=__version__)
@@ -170,17 +280,38 @@ if __name__ == '__main__':
                 return True
         return False
 
-    write_out_json = False
+    write_out_json = True
     if arguments['import']:
         newfeeds = opml_import(arguments['<opml_file_path>'], len(feeds), isdup)
         feeds.extend(newfeeds)
-        write_out_json = True
     elif arguments['export']:
         opml_export(arguments['<opml_file_path>'], feeds)
+        write_out_json = False
     elif arguments['list']:
         show_list(feeds, arguments['--tags'], arguments['--with'], arguments['--sort-by-name'])
+        write_out_json = False
+    elif arguments['addtag']:
+        add_tag(feeds, arguments['<feed>'], arguments['TAG'])
+    elif arguments['deltag']:
+        del_tag(feeds, arguments['<feed>'], arguments['TAG'])
+    elif arguments['add']:
+        addfeed(feeds, arguments['<feedurl>'], arguments['--name'], arguments['TAG'])
+    elif arguments['del']:
+        before = len(feeds)
+        feeds = delfeed(feeds, arguments['<feed>'])
+        after = len(feeds)
+        delta = before - after
+        if delta > 0:
+            print "(%s) Deleted" % delta
+        else:
+            print "Nothing deleted"
+    elif arguments['guess']:
+        guess(feeds, arguments['<htmlurl>'], arguments['--name'], arguments['TAG'])
 
     if write_out_json:
-        with open(arguments['--file'], 'w') as fout:
-            json.dump(feeds, fout)
+        if arguments['--file'] is not None:
+            with open(arguments['--file'], 'w') as fout:
+                json.dump(feeds, fout)
+        else:
+            print "Changes not saved (no --file specified)"
 
