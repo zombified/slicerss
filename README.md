@@ -1,7 +1,15 @@
 # SliceRSS
 
-This is a really basic RSS/Atom fetcher + reader. It is not intended to have a
-lot of features, or have multiple users.
+**2013/10/29** The project is in the process of being changed radically. It's
+being transformed into a tool that pulls down and manages more static content.
+The goal is to remove the need for a database to store content, and to have
+better utilities for managing feeds from the command line. All of the points
+about what this project tries to do is mostly going to stay the same -- just
+the mechanism by which it does so is changing.
+
+
+This is a really basic, *personal* RSS/Atom fetcher + reader. It is not
+intended to have a lot of features, or have multiple users.
 
 Here are a few things that this project tries to adhere to:
 
@@ -12,10 +20,8 @@ Here are a few things that this project tries to adhere to:
     There's no need for overly flashy GUI when all this project is intended to
     do is help you read text. Certainly a good looking project is intended,
     but not an overly flashy one.
-  * **No Javascript Async** -- It complicates things, and doesn't add much to
-    the experience this project is intending. This point is fairly flexible
-    though. If at some point there is some sort of slide-show feature for
-    moving through items, then using async to pre-load items would be useful.
+  * **Minimal use of Async** -- It complicates things, and doesn't add much to
+    the experience this project is intending.
   * **Mobile Friendly** -- The mobile reading experience should be a first
     class consideration in addition to desktop. This means either responsive
     design, or a design that works well regardless of viewing size.
@@ -24,9 +30,6 @@ Here are a few things that this project tries to adhere to:
     aimed at users that just want to run an install script and get using the
     app.
 
-It's encouraged that this project be forked and customized to an individuals
-needs. If you want to contribute back to this project, contributions are
-welcome! Just send a pull request.
 
 
 ## Installation
@@ -55,5 +58,4 @@ some such from a feed provider.
 The command `python manage.py runserver` will start a server on localhost:8080.
 
 To view the feeds, go to `http://localhost:8000/feeds`
-
 
