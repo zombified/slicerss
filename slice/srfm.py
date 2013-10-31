@@ -55,17 +55,14 @@ def loadfeeds(path):
         feeds = json.load(fin)
         return feeds
 
-# path -- path to OPML file to import
+# opml_data -- OPML formatted string
 # idoffset -- ID to start at when creating id's for feeds
 # isdup -- function that will return True or False if the given feed xmlUrl
 #           value is already found in our 'database', and it also takes a
 #           list of tags that should be added to the feed entery should it
 #           exist already
-def opml_import(path, idoffset, isdup):
-    if not os.path.isfile(path):
-        return []
-
-    outline = opml.parse(path)
+def opml_import(opml_data, idoffset, isdup):
+    outline = opml.from_string(opml_data)
     feeds = []
 
     def handlefeed(sub, tags):
@@ -94,9 +91,8 @@ def opml_import(path, idoffset, isdup):
     handlesub(outline, [])
     return feeds
 
-# path -- path to OPML file you'd like to write to
 # feeds -- list of feed dicts
-def opml_export(path, feeds):
+def opml_export(feeds):
     template = """
 <?xml version="1.0" encoding="UTF-8"?>
 <opml version="1.0">
@@ -123,35 +119,44 @@ def opml_export(path, feeds):
         outlines.append('</outline>')
     entries = "\n".join(outlines)
 
-    with open(path, "w") as fout:
-        fout.write((template%entries).encode('utf8'))
+    return (template%entries).encode('utf8')
+
 
 # feeds -- list of feed dicts to operate on
 # only_tags -- if true, a list of all tags used are shown
 # withtags -- if only_tags is false, this is a list of tags used to filter the feeds by
-def show_list(feeds, only_tags, withtags, sortbyname):
+# sortbyname -- if true, the returned list is sorted by name/title
+def get_list(feeds, only_tags, withtags, sortbyname):
     if only_tags:
         tags = []
         for feed in feeds:
             tags.extend(feed['tags'])
         tags = sorted([a for a in set(tags)])
-        for tag in tags:
-            print tag
-        return
+        return tags
 
     feedlist = sorted(feeds, key=lambda feed: feed['title']) if sortbyname else feeds
     filter = len(withtags) > 0
     filtertags = set(withtags)
-    def print_feed(feed):
-        print "%s%s: %s - %s [%s]" % (
-                " " if feed['id'] < 10 else "",
-                feed['id'], feed['title'], feed['xmlUrl'], ",".join(sorted(set(feed['tags']))))
+    finalfeeds = []
     for feed in feedlist:
         if filter:
             if len(filtertags.intersection(set(feed['tags']))) > 0:
-                print_feed(feed)
+                finalfeeds.append(feed)
         else:
-            print_feed(feed)
+            finalfeeds.append(feed)
+    return finalfeeds
+def show_list(feeds, only_tags, withtags, sortbyname):
+    feedlist = get_list(feeds, only_tags, withtags, sortbyname)
+    if only_tags:
+        for tag in feedlist:
+            print tag
+        return
+
+    for feed in feedlist:
+        print "%s%s: %s - %s [%s]" % (
+                " " if feed['id'] < 10 else "",
+                feed['id'], feed['title'], feed['xmlUrl'], ",".join(sorted(set(feed['tags']))))
+
 
 # feeds -- list of feed dicts to operate on
 # feed -- the title or id of a feed to act on... all matches are modified
@@ -184,8 +189,14 @@ def addfeed(feeds, feedurl, altname, tags):
             print 'Feed already found.'
             return
 
+    maxid = 0
+    for feed in feeds:
+        if feed['id'] > maxid:
+            maxid = feed['id']
+    maxid += 1
+
     newfeed = dict(
-        id=len(feeds),
+        id=maxid,
         tags=[a for a in set(tags)] if tags else [],
         title=altname if altname else '',
         xmlUrl=feedurl,
@@ -254,8 +265,13 @@ def guess(feeds, htmlurl, altname, tags):
         if not hasattr(resp['feed'], 'title'):
             print "RSS feed guessed (%s), but doesn't seem to be valid." % found_xmlurl
             return
+        maxid = 0
+        for feed in feeds:
+            if feed['id'] > maxid:
+                maxid = feed['id']
+        maxid += 1
         newfeed = dict(
-            id=len(feeds),
+            id=maxid,
             tags=[a for a in set(tags)] if tags else [],
             title=altname if altname else resp['feed'].title,
             xmlUrl=found_xmlurl,
@@ -282,10 +298,22 @@ if __name__ == '__main__':
 
     write_out_json = True
     if arguments['import']:
-        newfeeds = opml_import(arguments['<opml_file_path>'], len(feeds), isdup)
-        feeds.extend(newfeeds)
+        opml_data = ""
+        try:
+            if os.path.isfile(arguments['<opml_file_path>']):
+                with open(arguments['<opml_file_path>'], 'r') as opmlfile:
+                    opml_data = opmlfile.read()
+            newfeeds = opml_import(opml_data, len(feeds), isdup)
+            feeds.extend(newfeeds)
+        except:
+            print "Error: could not import OPML"
     elif arguments['export']:
-        opml_export(arguments['<opml_file_path>'], feeds)
+        opml_data = opml_export(feeds)
+        try:
+            with open(arguments['<opml_file_path>'], "w") as fout:
+                fout.write(opml_data)
+        except:
+            print "Error: could not export OPML"
         write_out_json = False
     elif arguments['list']:
         show_list(feeds, arguments['--tags'], arguments['--with'], arguments['--sort-by-name'])

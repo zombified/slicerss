@@ -7,7 +7,8 @@ setup(
     author='Joel Kleier',
     author_email='joel@kleier.us',
     url='http://joelkleier.com',
-    packages=[],
+    packages=['slice', 'tests'],
+    test_suite='tests',
     install_requires=[
         'beautifulsoup4',
         'docopt',
